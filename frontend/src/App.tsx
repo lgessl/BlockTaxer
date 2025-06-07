@@ -48,7 +48,7 @@ function App() {
                 </div>
                 <form onSubmit={handleSubmit} style={styles.form}>
                     <div>
-                        <label style={styles.label}>Coinbase CSV file</label>
+                        <label style={styles.label}>Coinbase statement (CSV)</label>
                         <input type="file" accept=".csv" onChange={e => {
                             const files = e.target.files;
                             if (files && files[0]) setFile(files[0]);
@@ -90,7 +90,7 @@ function App() {
                                 height: 20,
                             }}
                             tabIndex={0}
-                            title={'Add this amount of money to your tax filings under "Sonstige Einkünfte".'}
+                            title={'Add this amount of money to your tax to "Sonstige Einkünfte" in your tax return.'}
                         >
                             <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ display: 'block' }}>
                                 <circle cx="10" cy="10" r="9" fill="#232136" stroke="#fff" strokeWidth="2" />
