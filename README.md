@@ -1,10 +1,14 @@
-# CryptoTax
+<!-- Logo and Title -->
+<p align="left" style="display: flex; align-items: center;">
+    <img src="frontend/src/assets/blocktaxer_logo.svg" alt="BlockTaxer Logo" width="80" height="80" style="margin-right: 16px; vertical-align: middle;" />
+    <span style="font-size: 2.5em; font-weight: bold; vertical-align: middle;">BlockTaxer</span>
+</p>
 
-CryptoTax is an open-source project to help German individuals with crypto tax reporting. 
+BlockTaxer is an open-source project to help German individuals with crypto tax reporting. 
 It features a modern web frontend and a FastAPI backend.
 
 ## Features
-### Staking rewards 
+### Staking rewards for Coinbase
 Calculate the sum and monthly distribution of staking rewards (in EUR) for a given calendar year, based on a Coinbase CSV export.
 
 More features to come in the future!
@@ -26,4 +30,4 @@ More features to come in the future!
 By using this software, you agree that you do so at your own risk and that the author assumes no liability for any damages or losses.
 
 ## License
-MIT License
+GPLv3

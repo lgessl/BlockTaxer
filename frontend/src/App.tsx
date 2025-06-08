@@ -43,12 +43,12 @@ function App() {
         <div style={styles.page}>
             <div style={styles.card}>
                 <div style={styles.header}>
-                    <img src="/src/assets/cryptotax-logo.svg" alt="CryptoTax Logo" style={styles.logo} />
-                    <h2 style={styles.title}>Calculate your staking rewards</h2>
+                    <img src="/src/assets/blocktaxer_logo.svg" alt="BlockTaxer Logo" style={styles.logo} />
+                    <h2 style={styles.title}>BlockTaxer: Annual staking rewards</h2>
                 </div>
                 <form onSubmit={handleSubmit} style={styles.form}>
                     <div>
-                        <label style={styles.label}>Coinbase statement (CSV)</label>
+                        <label style={styles.label}>Coinbase transactions (CSV)</label>
                         <input type="file" accept=".csv" onChange={e => {
                             const files = e.target.files;
                             if (files && files[0]) setFile(files[0]);
