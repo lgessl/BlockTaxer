@@ -7,6 +7,8 @@ function App() {
     const [year, setYear] = useState<number>(new Date().getFullYear());
     const [result, setResult] = useState<number | null>(null);
     const [monthly, setMonthly] = useState<{ [month: number]: number } | null>(null);
+    const [realizedGains, setRealizedGains] = useState<number | null>(null);
+    const [taxableGains, setTaxableGains] = useState<number | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -20,6 +22,8 @@ function App() {
         setError(null);
         setResult(null);
         setMonthly(null);
+        setRealizedGains(null);
+        setTaxableGains(null);
         const formData = new FormData();
         formData.append('file', file);
         formData.append('year', year.toString());
@@ -32,6 +36,8 @@ function App() {
             const data = await res.json();
             setResult(data.staking_rewards_eur);
             setMonthly(data.monthly_rewards_eur || null);
+            setRealizedGains(data.realized_gains_eur ?? null);
+            setTaxableGains(data.taxable_gains_eur ?? null);
         } catch (err) {
             setError('Failed to calculate.');
         } finally {
@@ -79,20 +85,31 @@ function App() {
                     <div style={styles.result}>
                         Total staking rewards: <span style={styles.resultValue}>€{result}</span>
                         <span
-                            style={{
-                                display: 'inline-block',
-                                marginLeft: 10,
-                                cursor: 'pointer',
-                                color: '#818cf8',
-                                position: 'relative',
-                                verticalAlign: 'middle',
-                                width: 20,
-                                height: 20,
-                            }}
+                            style={styles.infoIcon}
                             tabIndex={0}
                             title={'Add this amount of money to your tax to "Sonstige Einkünfte" in your tax return.'}
                         >
-                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ display: 'block' }}>
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style={styles.infoIconSvg}>
+                                <circle cx="10" cy="10" r="9" fill="#232136" stroke="#fff" strokeWidth="2" />
+                                <text x="10" y="15" textAnchor="middle" fontSize="13" fontWeight="bold" fill="#fff" fontFamily="Arial, sans-serif">i</text>
+                            </svg>
+                        </span>
+                    </div>
+                )}
+                {realizedGains !== null && (
+                    <div style={styles.result}>
+                        Net realized gains: <span style={styles.resultValue}>€{realizedGains}</span>
+                    </div>
+                )}
+                {taxableGains !== null && (
+                    <div style={styles.result}>
+                        Taxable part of realized gains: <span style={styles.resultValue}>€{taxableGains}</span>
+                        <span
+                            style={styles.infoIcon}
+                            tabIndex={0}
+                            title={'This is the amount you need to declare as capital gains for tax purposes. Gains below €1000 and coins held >1 year are tax-free.'}
+                        >
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style={styles.infoIconSvg}>
                                 <circle cx="10" cy="10" r="9" fill="#232136" stroke="#fff" strokeWidth="2" />
                                 <text x="10" y="15" textAnchor="middle" fontSize="13" fontWeight="bold" fill="#fff" fontFamily="Arial, sans-serif">i</text>
                             </svg>

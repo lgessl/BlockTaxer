@@ -107,4 +107,17 @@ export const styles: { [key: string]: CSSProperties } = {
         padding: 12,
         border: '1px solid #f87171',
     },
+    infoIcon: {
+        display: 'inline-block',
+        marginLeft: 10,
+        cursor: 'pointer',
+        color: '#818cf8',
+        position: 'relative',
+        verticalAlign: 'middle',
+        width: 20,
+        height: 20,
+    },
+    infoIconSvg: {
+        display: 'block',
+    },
 };
