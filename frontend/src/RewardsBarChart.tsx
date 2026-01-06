@@ -49,6 +49,11 @@ export function RewardsBarChart({ data }: RewardsBarChartProps) {
           y: {
             grid: { color: '#312e81' },
             ticks: { color: '#a5b4fc' },
+            title: {
+              display: true,
+              text: 'EUR',
+              color: '#a5b4fc',
+            },
           },
         },
       }}

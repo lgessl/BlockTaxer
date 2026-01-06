@@ -87,17 +87,14 @@ async def staking_rewards_sum(
 ):
     content = await file.read()
     txs = parse_csv_transactions(content)
-    # Staking rewards sum (legacy)
-    total = 0.0
+    # Calculate monthly staking rewards
     monthly = {i: 0.0 for i in range(1, 13)}
     for tx in txs:
         if tx['type'] == 'Staking Income' and tx['timestamp'].year == year:
-            total += tx['eur']
             monthly[tx['timestamp'].month] += tx['eur']
-    # New: calculate realized and taxable gains
+    # Calculate realized and taxable gains
     realized_gains, taxable_gains = calculate_gains_fifo(txs, year)
     return JSONResponse({
-        "staking_rewards_eur": round(total, 2),
         "monthly_rewards_eur": {m: round(monthly[m], 2) for m in monthly},
         "realized_gains_eur": round(realized_gains, 2),
         "taxable_gains_eur": round(taxable_gains, 2)

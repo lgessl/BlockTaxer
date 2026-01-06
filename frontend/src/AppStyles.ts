@@ -15,7 +15,7 @@ export const styles: { [key: string]: CSSProperties } = {
         borderRadius: 16,
         boxShadow: '0 4px 24px rgba(0,0,0,0.18)',
         padding: 36,
-        maxWidth: 420,
+        maxWidth: 500,
         width: '100%',
     },
     header: {
@@ -24,9 +24,9 @@ export const styles: { [key: string]: CSSProperties } = {
         marginBottom: 24,
     },
     logo: {
-        width: 40,
-        height: 40,
-        marginRight: 12,
+        width: 60,
+        height: 60,
+        marginRight: 16,
     },
     title: {
         margin: 0,
@@ -34,6 +34,14 @@ export const styles: { [key: string]: CSSProperties } = {
         fontSize: 24,
         color: '#a5b4fc',
         letterSpacing: 0.5,
+        lineHeight: 1.2,
+    },
+    subtitle: {
+        margin: 0,
+        marginTop: 4,
+        fontWeight: 400,
+        fontSize: 14,
+        color: '#ffffffff',
     },
     form: {
         display: 'flex',

@@ -30,7 +30,6 @@ def test_staking_rewards_sum_2025():
     os.unlink(file_path)
     assert response.status_code == 200
     data = response.json()
-    assert data["staking_rewards_eur"] == 96.0  # 20 + 50 + 26
     assert data["monthly_rewards_eur"]["1"] == 20.0
     assert data["monthly_rewards_eur"]["2"] == 76.0
     assert data["monthly_rewards_eur"]["3"] == 0.0
@@ -49,7 +48,6 @@ def test_staking_rewards_sum_2024():
     os.unlink(file_path)
     assert response.status_code == 200
     data = response.json()
-    assert data["staking_rewards_eur"] == 18.0
     assert data["monthly_rewards_eur"]["3"] == 18.0
     assert data["monthly_rewards_eur"]["1"] == 0.0
     # No sells in 2024, so realized and taxable gains should be 0
@@ -68,7 +66,6 @@ def test_staking_rewards_sum_no_staking():
     os.unlink(file_path)
     assert response.status_code == 200
     data = response.json()
-    assert data["staking_rewards_eur"] == 0.0
     assert all(v == 0.0 for v in data["monthly_rewards_eur"].values())
     assert data["realized_gains_eur"] == 0.0
     assert data["taxable_gains_eur"] == 0.0

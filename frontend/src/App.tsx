@@ -5,8 +5,8 @@ import { RewardsBarChart } from './RewardsBarChart';
 function App() {
     const [file, setFile] = useState<File | null>(null);
     const [year, setYear] = useState<number>(new Date().getFullYear());
-    const [result, setResult] = useState<number | null>(null);
-    const [monthly, setMonthly] = useState<{ [month: number]: number } | null>(null);
+    const [stakingRewardTotal, setStakingRewardTotal] = useState<number | null>(null);
+    const [monthlyStakingReward, setMonthlyStakingReward] = useState<{ [month: number]: number } | null>(null);
     const [realizedGains, setRealizedGains] = useState<number | null>(null);
     const [taxableGains, setTaxableGains] = useState<number | null>(null);
     const [loading, setLoading] = useState(false);
@@ -20,8 +20,8 @@ function App() {
         }
         setLoading(true);
         setError(null);
-        setResult(null);
-        setMonthly(null);
+        setStakingRewardTotal(null);
+        setMonthlyStakingReward(null);
         setRealizedGains(null);
         setTaxableGains(null);
         const formData = new FormData();
@@ -34,8 +34,11 @@ function App() {
             });
             if (!res.ok) throw new Error('Server error');
             const data = await res.json();
-            setResult(data.staking_rewards_eur);
-            setMonthly(data.monthly_rewards_eur || null);
+            const monthlyData = data.monthly_rewards_eur || null;
+            setMonthlyStakingReward(monthlyData);
+            // Calculate total from monthly data
+            const total = monthlyData ? parseFloat((Object.values(monthlyData) as number[]).reduce((sum: number, val: number) => sum + val, 0).toFixed(2)) : 0;
+            setStakingRewardTotal(total);
             setRealizedGains(data.realized_gains_eur ?? null);
             setTaxableGains(data.taxable_gains_eur ?? null);
         } catch (err) {
@@ -50,7 +53,10 @@ function App() {
             <div style={styles.card}>
                 <div style={styles.header}>
                     <img src="/src/assets/blocktaxer_logo.svg" alt="BlockTaxer Logo" style={styles.logo} />
-                    <h2 style={styles.title}>BlockTaxer: Annual staking rewards</h2>
+                    <div>
+                        <h2 style={styles.title}>BlockTaxer</h2>
+                        <p style={styles.subtitle}>Supercharge your crypto tax</p>
+                    </div>
                 </div>
                 <form onSubmit={handleSubmit} style={styles.form}>
                     <div>
@@ -81,44 +87,50 @@ function App() {
                         {loading ? 'Calculating...' : 'Calculate'}
                     </button>
                 </form>
-                {result !== null && (
-                    <div style={styles.result}>
-                        Total staking rewards: <span style={styles.resultValue}>€{result}</span>
-                        <span
-                            style={styles.infoIcon}
-                            tabIndex={0}
-                            title={'Add this amount of money to your tax to "Sonstige Einkünfte" in your tax return.'}
-                        >
-                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style={styles.infoIconSvg}>
-                                <circle cx="10" cy="10" r="9" fill="#232136" stroke="#fff" strokeWidth="2" />
-                                <text x="10" y="15" textAnchor="middle" fontSize="13" fontWeight="bold" fill="#fff" fontFamily="Arial, sans-serif">i</text>
-                            </svg>
-                        </span>
+                {(realizedGains !== null || taxableGains !== null) && (
+                    <div>
+                        {realizedGains !== null && (
+                            <div style={styles.result}>
+                                Realized gains: <span style={styles.resultValue}>€{realizedGains}</span>
+                            </div>
+                        )}
+                        {taxableGains !== null && (
+                            <div style={styles.result}>
+                                Taxable gains: <span style={styles.resultValue}>€{taxableGains}</span>
+                                <span
+                                    style={styles.infoIcon}
+                                    tabIndex={0}
+                                    title={'This is the amount you need to declare as capital gains for tax purposes. Gains below €1000 and coins held >1 year are tax-free.'}
+                                >
+                                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style={styles.infoIconSvg}>
+                                        <circle cx="10" cy="10" r="9" fill="#232136" stroke="#fff" strokeWidth="2" />
+                                        <text x="10" y="15" textAnchor="middle" fontSize="13" fontWeight="bold" fill="#fff" fontFamily="Arial, sans-serif">i</text>
+                                    </svg>
+                                </span>
+                            </div>
+                        )}
                     </div>
                 )}
-                {realizedGains !== null && (
-                    <div style={styles.result}>
-                        Net realized gains: <span style={styles.resultValue}>€{realizedGains}</span>
-                    </div>
-                )}
-                {taxableGains !== null && (
-                    <div style={styles.result}>
-                        Taxable part of realized gains: <span style={styles.resultValue}>€{taxableGains}</span>
-                        <span
-                            style={styles.infoIcon}
-                            tabIndex={0}
-                            title={'This is the amount you need to declare as capital gains for tax purposes. Gains below €1000 and coins held >1 year are tax-free.'}
-                        >
-                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style={styles.infoIconSvg}>
-                                <circle cx="10" cy="10" r="9" fill="#232136" stroke="#fff" strokeWidth="2" />
-                                <text x="10" y="15" textAnchor="middle" fontSize="13" fontWeight="bold" fill="#fff" fontFamily="Arial, sans-serif">i</text>
-                            </svg>
-                        </span>
-                    </div>
-                )}
-                {monthly && (
-                    <div style={{ marginTop: 32 }}>
-                        <RewardsBarChart data={monthly} />
+                {stakingRewardTotal !== null && (
+                    <div style={{ marginTop: 32, borderTop: '1px solid #312e81' }}>
+                        <div style={styles.result}>
+                            Total staking rewards: <span style={styles.resultValue}>€{stakingRewardTotal}</span>
+                            <span
+                                style={styles.infoIcon}
+                                tabIndex={0}
+                                title={'Add this amount of money to your tax to "Sonstige Einkünfte" in your tax return.'}
+                            >
+                                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style={styles.infoIconSvg}>
+                                    <circle cx="10" cy="10" r="9" fill="#232136" stroke="#fff" strokeWidth="2" />
+                                    <text x="10" y="15" textAnchor="middle" fontSize="13" fontWeight="bold" fill="#fff" fontFamily="Arial, sans-serif">i</text>
+                                </svg>
+                            </span>
+                        </div>
+                        {monthlyStakingReward && (
+                            <div style={{ marginTop: 20, display: 'flex', justifyContent: 'center' }}>
+                                <RewardsBarChart data={monthlyStakingReward} />
+                            </div>
+                        )}
                     </div>
                 )}
                 {error && <div style={styles.error}>{error}</div>}
