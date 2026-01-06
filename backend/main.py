@@ -17,8 +17,11 @@ app.add_middleware(
 )
 
 def parse_eur(value):
-    # Remove euro sign and commas, convert to float
-    return float(value.replace('€', '').replace(',', '').strip())
+    # Remove euro sign and thousands separators (commas)
+    cleaned_value = value.replace('€', '').replace(',', '').strip()
+    if cleaned_value == '':
+        return 0.0
+    return float(cleaned_value)
 
 def parse_csv_transactions(content):
     s = StringIO(content.decode())
@@ -29,8 +32,9 @@ def parse_csv_transactions(content):
         txs.append({
             'type': row['Transaction Type'],
             'asset': row['Asset'],
-            'amount': abs(float(row['Quantity Transacted'])), # Coinbase uses negative for sells
-            'eur': parse_eur(row['Subtotal']),
+            'amount': abs(float(row['Quantity Transacted'])), # Negative for sells for Coinbase
+            'subtotal_eur': parse_eur(row['Subtotal']),
+            'fees_eur': parse_eur(row['Fees and/or Spread']),
             'timestamp': ts,
             'row': row
         })
@@ -47,14 +51,14 @@ def calculate_gains_fifo(txs, year):
             inventory[tx['asset']].append({
                 'amount': tx['amount'],
                 'buy_time': tx['timestamp'],
-                'buy_eur': tx['eur'],
+                'buy_eur': tx['subtotal_eur'] + tx['fees_eur'], # Add order fees like in §20 (4) EStG 
                 'is_staking': tx['type'] == 'Staking Income',
             })
         elif tx['type'] == 'Sell':
             # Process ALL sells to maintain correct FIFO inventory state
             sell_amount = tx['amount']
             sell_time = tx['timestamp']
-            sell_eur = tx['eur']
+            sell_eur = tx['subtotal_eur'] - tx['fees_eur'] # Subtract fees like in §20 (4) EStG
             is_target_year = tx['timestamp'].year == year
             # FIFO: consume from inventory
             while sell_amount > 0 and inventory[tx['asset']]:
@@ -91,7 +95,7 @@ async def staking_rewards_sum(
     monthly = {i: 0.0 for i in range(1, 13)}
     for tx in txs:
         if tx['type'] == 'Staking Income' and tx['timestamp'].year == year:
-            monthly[tx['timestamp'].month] += tx['eur']
+            monthly[tx['timestamp'].month] += tx['subtotal_eur']
     # Calculate realized and taxable gains
     realized_gains, taxable_gains = calculate_gains_fifo(txs, year)
     return JSONResponse({

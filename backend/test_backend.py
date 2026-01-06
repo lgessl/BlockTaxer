@@ -72,10 +72,10 @@ def test_staking_rewards_sum_no_staking():
 
 # Realized and taxable gains with a sell
 SELL_SAMPLE_CSV = '''ID,Timestamp,Transaction Type,Asset,Quantity Transacted,Price Currency,Price at Transaction,Subtotal,Total (inclusive of fees and/or spread),Fees and/or Spread,Notes\n
-1,2023-01-01 12:00:00 UTC,Buy,ETH,0.5,EUR,€1000,€500,€500,€0.00,\n
+1,2023-01-01 12:00:00 UTC,Buy,ETH,0.5,EUR,€1000,€480,€500,€20.00,\n
 2,2024-01-09 12:00:00 UTC,Staking Income,ETH,0.5,EUR,€2000,€1000,€1000,€0.00,\n
-3,2025-01-01 12:00:00 UTC,Sell,ETH,-0.3,EUR,€4000,€1200,€1200,€0.00,\n
-4,2025-01-02 12:00:00 UTC,Sell,ETH,-0.5,EUR,€8000,€4000,€4000,€0.00,\n'''
+3,2025-01-01 12:00:00 UTC,Sell,ETH,-0.3,EUR,€4000,€1230,€1200,€30.00,\n
+4,2025-01-02 12:00:00 UTC,Sell,ETH,-0.5,EUR,€8000,€4080,€4000,€80.00,\n'''
 def test_realized_and_taxable_gains():
     file_path = make_file(SELL_SAMPLE_CSV)
     with open(file_path, 'rb') as f:
@@ -87,11 +87,13 @@ def test_realized_and_taxable_gains():
     os.unlink(file_path)
     assert response.status_code == 200
     data = response.json()
-    # First sell (0.3 ETH at €1200): Uses 0.3 from Buy 2023-01-01 (partial lot)
-    # Cost: €500 * (0.3/0.5) = €300, Proceeds: €1200, Gain: €900 (held >1 year, tax-free)
-    # Second sell (0.5 ETH at €4000): Uses remaining 0.2 from Buy + 0.3 from Staking
-    # - 0.2 ETH from Buy: cost €200, proceeds €1600, gain €1400 (held >1 year, tax-free)
-    # - 0.3 ETH from Staking: cost €600, proceeds €2400, gain €1800 (held <1 year, taxable)
+    # First sell (0.3 ETH, subtotal €1230 - €30 fee = €1200 proceeds):
+    #   Uses 0.3 from Buy 2023-01-01 (partial lot)
+    #   Cost: (€480 + €20 fee) * (0.3/0.5) = €300, Proceeds: €1200, Gain: €900 (held >1 year, tax-free)
+    # Second sell (0.5 ETH, subtotal €4080 - €80 fee = €4000 proceeds):
+    #   Uses remaining 0.2 from Buy + 0.3 from Staking
+    #   - 0.2 ETH from Buy: cost €500 * (0.2/0.5) = €200, proceeds €4000 * (0.2/0.5) = €1600, gain €1400 (held >1 year, tax-free)
+    #   - 0.3 ETH from Staking: cost €1000 * (0.3/0.5) = €600, proceeds €4000 * (0.3/0.5) = €2400, gain €1800 (held <1 year, taxable)
     # Total realized: 900 + 1400 + 1800 = 4100
     # Taxable: 1800 - 1000 exemption = 800
     assert data["realized_gains_eur"] == 4100.0
@@ -99,10 +101,10 @@ def test_realized_and_taxable_gains():
 
 # Previous year sell consumes FIFO lots
 PREVIOUS_YEAR_SELL_CSV = '''ID,Timestamp,Transaction Type,Asset,Quantity Transacted,Price Currency,Price at Transaction,Subtotal,Total (inclusive of fees and/or spread),Fees and/or Spread,Notes\n
-1,2023-01-01 12:00:00 UTC,Buy,ETH,0.5,EUR,€1000,€500,€500,€0.00,\n
-2,2024-01-01 12:00:00 UTC,Buy,ETH,0.5,EUR,€2000,€1000,€1000,€0.00,\n
-3,2024-06-01 12:00:00 UTC,Sell,ETH,-0.3,EUR,€3000,€900,€900,€0.00,\n
-4,2025-03-01 12:00:00 UTC,Sell,ETH,-0.4,EUR,€4000,€1600,€1600,€0.00,\n'''
+1,2023-01-01 12:00:00 UTC,Buy,ETH,0.5,EUR,€1000,€475,€500,€25.00,\n
+2,2024-01-01 12:00:00 UTC,Buy,ETH,0.5,EUR,€2000,€970,€1000,€30.00,\n
+3,2024-06-01 12:00:00 UTC,Sell,ETH,-0.3,EUR,€3000,€920,€900,€20.00,\n
+4,2025-03-01 12:00:00 UTC,Sell,ETH,-0.4,EUR,€4000,€1640,€1600,€40.00,\n'''
 def test_previous_year_sell_consumes_fifo_lots():
     file_path = make_file(PREVIOUS_YEAR_SELL_CSV)
     with open(file_path, 'rb') as f:
@@ -115,10 +117,10 @@ def test_previous_year_sell_consumes_fifo_lots():
     assert response.status_code == 200
     data = response.json()
     # 2024 sell consumed 0.3 ETH from the first FIFO lot (0.5 ETH from 2023-01-01), leaving 0.2 ETH
-    # 2025 sell (0.4 ETH) should consume:
-    # - Remaining 0.2 ETH from first lot (2023-01-01): cost €200, proceeds €800, gain €600 (held >1 year, tax-free)
-    # - 0.2 ETH from second lot (2024-01-01): cost €400, proceeds €800, gain €400 (held <1 year, taxable)
+    # 2025 sell (0.4 ETH, subtotal €1640 - €40 fee = €1600 proceeds) should consume:
+    # - Remaining 0.2 ETH from first lot (2023-01-01): cost €500 * (0.2/0.5) = €200, proceeds €1600 * (0.2/0.4) = €800, gain €600 (held >1 year, tax-free)
+    # - 0.2 ETH from second lot (2024-01-01): cost €1000 * (0.2/0.5) = €400, proceeds €1600 * (0.2/0.4) = €800, gain €400 (held <1 year, taxable)
     # Total realized: 600 + 400 = 1000
-    # Taxable: 400 - 1000 exemption = 0
+    # Taxable: 400 - 1000 exemption = 0 (exemption covers it)
     assert data["realized_gains_eur"] == 1000.0
     assert data["taxable_gains_eur"] == 0.0
